@@ -416,3 +416,10 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+
+**/appsettings.Local.json
+**/*.local.json
+.env
+.env.*
+**/user-secrets/
