@@ -2,9 +2,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FreightFlow.Shipment.Application\FreightFlow.Shipment.Application.csproj" />
+    <ProjectReference Include="..\..\..\shared\FreightFlow.Shared.Contracts\FreightFlow.Shared.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="MassTransit" Version="8.3.6" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.3.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
