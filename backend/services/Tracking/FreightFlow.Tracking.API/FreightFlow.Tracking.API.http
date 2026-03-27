@@ -1,0 +1,6 @@
+@FreightFlow.Tracking.API_HostAddress = http://localhost:5078
+
+GET {{FreightFlow.Tracking.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

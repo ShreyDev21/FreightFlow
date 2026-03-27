@@ -1,0 +1,222 @@
+🧠 1. API Gateway (YARP) — The Traffic Police
+
+Browser → Swagger → POST /api/shipments → port 5000
+
+This hits your Gateway using YARP.
+
+What YARP actually does:
+It does NOT execute business logic
+
+It just says:
+“Oh this route belongs to Shipment Service → forward it”
+
+Internally:
+Client → Gateway → (forward HTTP request) → Shipment Service
+
+Why this matters:
+Single entry point for all APIs
+
+You can add:
+
+Authentication
+Rate limiting
+Logging
+Load balancing
+
+👉 Think of it like a receptionist in an office.
+
+
+
+📦 2. Controller — The Translator
+
+ShipmentsController → CreateShipmentCommand
+
+This is your ASP.NET Core controller.
+
+What it should do:
+
+Accept HTTP request
+Validate input (basic)
+Convert request → Command
+Send to MediatR
+
+What it should NOT do:
+
+❌ Business logic
+❌ DB calls
+❌ Complex processing
+
+Example: await _mediator.Send(new CreateShipmentCommand(dto));
+
+👉 Think of it like:
+
+“I don’t solve the problem, I just forward it to the right person.”
+
+
+
+🔀 3. MediatR — The Smart Dispatcher (CQRS Core)
+
+You’re using MediatR
+This is where things get interesting.
+
+🔹 What problem MediatR solves?
+
+Without MediatR:
+Controller → Service → Repository → Domain
+
+With MediatR:
+Controller → Command → Handler
+
+🔹 What is CQRS?
+CQRS = Command Query Responsibility Segregation
+
+Command → changes data
+Query → reads data
+
+You used:
+CreateShipmentCommand
+
+So this is a Command (write operation)
+
+🔹 What MediatR does internally:
+
+When you call:
+
+_mediator.Send(command);
+
+It:
+
+Finds the handler:
+CreateShipmentCommandHandler
+
+Calls:
+Handle(command)
+
+👉 No manual wiring needed. It’s automatic.
+
+
+
+⚙️ 4. Handler — The Real Worker
+
+CreateShipmentCommandHandler
+
+This is where actual orchestration happens.
+
+Responsibilities:
+Call Domain
+Call Repository
+Publish events
+
+Example flow:
+Handler:
+
+  → Call Shipment.Create()
+  → Save to DB
+  → Publish event
+
+👉 This is your application layer
+
+
+🧬 5. Domain Layer — Pure Business Brain
+
+Shipment.Create()
+
+This is the MOST important part.
+
+🔹 What is Domain?
+
+Pure C# classes
+No EF Core
+No DB
+No HTTP
+
+Example:
+
+public static Shipment Create(double weight)
+{
+    if (weight <= 0)
+        throw new Exception("Invalid weight");
+
+    return new Shipment
+    {
+        TrackingNumber = GenerateTracking(),
+        Status = Pending
+    };
+}
+
+🔹 Why this is powerful:
+
+Business rules are centralized
+Easily testable
+No dependency on infrastructure
+
+👉 This is Domain-Driven Design (DDD)
+
+
+
+💾 6. Infrastructure — Database Layer
+
+You mentioned:
+
+Saved to NeonDB via EF Core
+
+Using:
+
+Entity Framework Core
+NeonDB
+🔹 What happens here:
+
+Handler calls repository:
+
+await _dbContext.Shipments.AddAsync(shipment);
+await _dbContext.SaveChangesAsync();
+🔹 Important:
+
+Infrastructure:
+
+Knows DB
+Knows EF Core
+Knows SQL
+
+Domain:
+
+❌ Does NOT know DB
+
+👉 This separation = clean architecture
+
+
+
+📢 7. Event Publishing — Async Communication
+
+ShipmentCreatedEvent → RabbitMQ
+
+Using:
+
+RabbitMQ
+CloudAMQP
+
+🔹 What is happening?
+
+After saving shipment:
+
+Event → "ShipmentCreated"
+
+Published to queue.
+
+🔹 Why events?
+
+Instead of:
+
+Shipment Service → Call Email Service → Call Billing Service
+
+You do:
+
+Shipment Service → Publish Event
+Other services → Listen
+
+🔹 Benefits:
+
+Loose coupling
+Scalable
+Async processing
+Easy to add new services later
